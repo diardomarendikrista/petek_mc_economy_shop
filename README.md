@@ -1,12 +1,28 @@
-# Petek Economy & Shop (Single Player Edition)
+<p align="center">
+  <img src="pack_icon.png" alt="Petek Economy & Shop Icon" width="120" style="border-radius: 12px;" />
+</p>
 
-Addon Bedrock Behavior Pack mandiri yang dioptimalkan khusus untuk kenyamanan dan keaslian bermain Single Player Survival dengan sistem **Toko Fisik (Sign Shop)** dan **Ekonomi Terkalibrasi**.
+<h1 align="center">Petek Economy & Shop (Single Player Edition)</h1>
+
+<p align="center">
+  <em>Addon Bedrock Behavior Pack mandiri yang dioptimalkan khusus untuk kenyamanan dan keaslian bermain Single Player Survival dengan sistem Toko Fisik (Sign Shop) dan Ekonomi Terkalibrasi.</em>
+</p>
 
 > **Keunggulan:**
 >
 > - **Tanpa Beta APIs & Tanpa Experiments:** Menggunakan Script API versi Stable (`@minecraft/server: 1.14.0+` dan `@minecraft/server-ui: 1.3.0`), sehingga world survival vanilla tanpa eksperimen dapat langsung memainkannya.
 > - **Sistem Toko Fisik Realistis (Imersif):** Pemain tidak bisa belanja dari antah berantah (misal di goa atau Nether), melainkan harus membangun kios/gedung toko di base lalu memasang papan Sign.
 > - **Ekonomi Seimbang (Anti-Exploit):** Dirancang sistematis berdasarkan rasio galian tambang. Bebas dari eksploitasi panen kayu/pertanian, dan menghargai proses peleburan (smelting).
+
+---
+
+## 📸 Screenshot & Preview
+
+<p align="center">
+  <img src=".github/assets/mc-1.jpg" alt="Preview 1" width="850" /><br><br>
+  <img src=".github/assets/mc-2.jpg" alt="Preview 2" width="850" /><br><br>
+  <img src=".github/assets/mc-3.jpg" alt="Preview 3" width="850" />
+</p>
 
 ---
 
