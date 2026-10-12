@@ -113,7 +113,7 @@ export function handleShopSignInteract(event) {
       if (cat.toLowerCase() === "all") {
         showMainShopMenu(player);
       } else {
-        showShopUI(player, cat);
+        showShopUI(player, cat, true); // true = Kategori terkunci, tidak bisa back ke menu/kategori lain
       }
     });
     return;
@@ -142,8 +142,8 @@ export function handleShopSignInteract(event) {
         }
       }
 
-      // Buka Menu Jual
-      showSellMenu(player);
+      // Buka Menu Jual (Terkunci khusus sell, tidak bisa back ke menu beli)
+      showSellMenu(player, false);
     });
     return;
   }

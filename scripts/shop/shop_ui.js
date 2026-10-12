@@ -14,7 +14,7 @@ import {
 import { SERVER_SHOP_ITEMS, SHOP_CATEGORIES } from "./shop_items.js";
 
 // ==========================================
-// 1. MAIN SHOP MENU
+// 1. MAIN SHOP MENU ([MARKET] All)
 // ==========================================
 export function showMainShopMenu(player) {
   const balance = getBalance(player);
@@ -56,11 +56,11 @@ export function showMainShopMenu(player) {
       if (res.selection === 0) {
         showCategoryPicker(player);
       } else if (res.selection === 1) {
-        showSellHandUI(player);
+        showSellHandUI(player, true);
       } else if (res.selection === 2) {
-        showSellInventoryUI(player);
+        showSellInventoryUI(player, true);
       } else if (res.selection === 3) {
-        showHeldItemPriceUI(player);
+        showHeldItemPriceUI(player, true);
       } else if (CONFIG.ENABLE_BLACKSMITH_REPAIR && res.selection === 4) {
         showRepairUI(player);
       }
@@ -69,7 +69,7 @@ export function showMainShopMenu(player) {
 }
 
 // ==========================================
-// 2. PILIH KATEGORI BELI
+// 2. PILIH KATEGORI BELI (DARI MENU ALL)
 // ==========================================
 export function showCategoryPicker(player) {
   const form = new ActionFormData()
@@ -93,15 +93,17 @@ export function showCategoryPicker(player) {
       }
 
       const selectedCat = SHOP_CATEGORIES[res.selection];
-      showShopUI(player, selectedCat.id);
+      // Dibuka dari picker, jadi isLockedCategory = false (bisa kembali ke picker)
+      showShopUI(player, selectedCat.id, false);
     });
   });
 }
 
 // ==========================================
 // 3. DAFTAR BARANG DI KATEGORI
+// isLockedCategory: Jika true (dari sign khusus), tombolnya TUTUP (tidak bisa lompat ke kategori lain)
 // ==========================================
-export function showShopUI(player, category = "all") {
+export function showShopUI(player, category = "all", isLockedCategory = false) {
   const currentCat = SHOP_CATEGORIES.find(
     (c) => c.id.toLowerCase() === category.toLowerCase(),
   );
@@ -123,19 +125,28 @@ export function showShopUI(player, category = "all") {
   for (const item of filteredItems) {
     form.button(`${item.name}\n§e${formatMoney(item.price)}`, getTexture(item));
   }
-  form.button("§l§c⬅ KEMBALI", "textures/ui/arrow_left");
+
+  // Jika kategori terkunci (toko khusus): Tombolnya TUTUP, bukan KEMBALI
+  if (isLockedCategory) {
+    form.button("§l§c✖ TUTUP", "textures/ui/cancel");
+  } else {
+    form.button("§l§c⬅ KEMBALI", "textures/ui/arrow_left");
+  }
 
   system.run(() => {
     form.show(player).then((res) => {
       if (res.canceled) return;
 
+      // Klik tombol terakhir (Kembali / Tutup)
       if (res.selection === filteredItems.length) {
-        showCategoryPicker(player);
+        if (!isLockedCategory) {
+          showCategoryPicker(player);
+        }
         return;
       }
 
       const selectedItem = filteredItems[res.selection];
-      buyConfirmation(player, selectedItem, category);
+      buyConfirmation(player, selectedItem, category, isLockedCategory);
     });
   });
 }
@@ -143,7 +154,7 @@ export function showShopUI(player, category = "all") {
 // ==========================================
 // 4. KONFIRMASI BELI
 // ==========================================
-function buyConfirmation(player, item, returnCategory) {
+function buyConfirmation(player, item, returnCategory, isLockedCategory = false) {
   const balance = getBalance(player);
 
   const form = new ModalFormData()
@@ -160,13 +171,13 @@ function buyConfirmation(player, item, returnCategory) {
   system.run(() => {
     form.show(player).then((res) => {
       if (res.canceled) {
-        showShopUI(player, returnCategory);
+        showShopUI(player, returnCategory, isLockedCategory);
         return;
       }
 
       const [amount, confirmed] = res.formValues;
       if (!confirmed) {
-        showShopUI(player, returnCategory);
+        showShopUI(player, returnCategory, isLockedCategory);
         return;
       }
 
@@ -178,7 +189,7 @@ function buyConfirmation(player, item, returnCategory) {
           `§c[Shop] Saldo tidak cukup! Butuh: ${formatMoney(totalPrice)}`,
         );
         player.playSound("mob.villager.no");
-        showShopUI(player, returnCategory);
+        showShopUI(player, returnCategory, isLockedCategory);
         return;
       }
 
@@ -188,7 +199,7 @@ function buyConfirmation(player, item, returnCategory) {
           "§c[Shop] Inventory penuh! Sisakan minimal 1 slot kosong.",
         );
         player.playSound("mob.villager.no");
-        showShopUI(player, returnCategory);
+        showShopUI(player, returnCategory, isLockedCategory);
         return;
       }
 
@@ -203,7 +214,7 @@ function buyConfirmation(player, item, returnCategory) {
           player.sendMessage(
             "§c[Error] Gagal memberikan item. Saldo dikembalikan.",
           );
-          showShopUI(player, returnCategory);
+          showShopUI(player, returnCategory, isLockedCategory);
           return;
         }
       }
@@ -214,15 +225,17 @@ function buyConfirmation(player, item, returnCategory) {
       player.sendMessage(`§aSisa Saldo: §e${formatMoney(getBalance(player))}`);
       player.playSound("random.orb");
 
-      showShopUI(player, returnCategory);
+      showShopUI(player, returnCategory, isLockedCategory);
     });
   });
 }
 
 // ==========================================
-// 5. MENU JUAL LANGSUNG (UNTUK SIGN [SELL])
+// 5. MENU JUAL (UNTUK SIGN [SELL] ATAU DARI MAIN MENU)
+// fromMainMenu: Jika true (dari [MARKET] All), tombol back kembali ke Main Menu.
+//               Jika false (dari [SELL] Sign), tombolnya TUTUP (tidak bisa lompat ke beli).
 // ==========================================
-export function showSellMenu(player) {
+export function showSellMenu(player, fromMainMenu = false) {
   const form = new ActionFormData()
     .title("§l§6MENU JUAL BARANG")
     .body(
@@ -239,15 +252,21 @@ export function showSellMenu(player) {
     .button(
       "§l§bℹ️ CEK HARGA TANGAN\n§r§8Lihat nilai jual item di tangan",
       "textures/ui/magnifying_glass",
-    )
-    .button("§l§c✖ TUTUP", "textures/ui/cancel");
+    );
+
+  if (fromMainMenu) {
+    form.button("§l§c⬅ KEMBALI", "textures/ui/arrow_left");
+  } else {
+    form.button("§l§c✖ TUTUP", "textures/ui/cancel");
+  }
 
   system.run(() => {
     form.show(player).then((res) => {
       if (res.canceled) return;
-      if (res.selection === 0) showSellHandUI(player);
-      else if (res.selection === 1) showSellInventoryUI(player);
-      else if (res.selection === 2) showHeldItemPriceUI(player);
+      if (res.selection === 0) showSellHandUI(player, fromMainMenu);
+      else if (res.selection === 1) showSellInventoryUI(player, fromMainMenu);
+      else if (res.selection === 2) showHeldItemPriceUI(player, fromMainMenu);
+      else if (fromMainMenu && res.selection === 3) showMainShopMenu(player);
     });
   });
 }
@@ -255,7 +274,15 @@ export function showSellMenu(player) {
 // ==========================================
 // JUAL ITEM DI TANGAN (UI)
 // ==========================================
-export function showSellHandUI(player) {
+export function showSellHandUI(player, fromMainMenu = false) {
+  const returnToPrevious = () => {
+    if (fromMainMenu) {
+      showMainShopMenu(player);
+    } else {
+      showSellMenu(player, false);
+    }
+  };
+
   const info = getHeldItemSellInfo(player);
 
   if (info.error) {
@@ -267,7 +294,7 @@ export function showSellHandUI(player) {
       .button("§l§c⬅ KEMBALI", "textures/ui/arrow_left");
 
     system.run(() => {
-      errorForm.show(player).then(() => showMainShopMenu(player));
+      errorForm.show(player).then(returnToPrevious);
     });
     return;
   }
@@ -295,7 +322,7 @@ export function showSellHandUI(player) {
   system.run(() => {
     form.show(player).then((res) => {
       if (res.canceled || res.selection === 2) {
-        showMainShopMenu(player);
+        returnToPrevious();
         return;
       }
 
@@ -305,7 +332,7 @@ export function showSellHandUI(player) {
         handleSellHand(player, 1);
       }
 
-      showMainShopMenu(player);
+      returnToPrevious();
     });
   });
 }
@@ -313,7 +340,15 @@ export function showSellHandUI(player) {
 // ==========================================
 // 6. JUAL DARI INVENTORY (UI LIST)
 // ==========================================
-export function showSellInventoryUI(player) {
+export function showSellInventoryUI(player, fromMainMenu = false) {
+  const returnToPrevious = () => {
+    if (fromMainMenu) {
+      showMainShopMenu(player);
+    } else {
+      showSellMenu(player, false);
+    }
+  };
+
   const sellableList = getInventorySellableItems(player);
 
   if (sellableList.length === 0) {
@@ -325,7 +360,7 @@ export function showSellInventoryUI(player) {
       .button("§l§c⬅ KEMBALI", "textures/ui/arrow_left");
 
     system.run(() => {
-      emptyForm.show(player).then(() => showMainShopMenu(player));
+      emptyForm.show(player).then(returnToPrevious);
     });
     return;
   }
@@ -347,17 +382,17 @@ export function showSellInventoryUI(player) {
       if (res.canceled) return;
 
       if (res.selection === sellableList.length) {
-        showMainShopMenu(player);
+        returnToPrevious();
         return;
       }
 
       const selected = sellableList[res.selection];
-      confirmSellInventoryItem(player, selected);
+      confirmSellInventoryItem(player, selected, fromMainMenu);
     });
   });
 }
 
-function confirmSellInventoryItem(player, itemInfo) {
+function confirmSellInventoryItem(player, itemInfo, fromMainMenu = false) {
   const form = new ActionFormData()
     .title(`Jual: ${itemInfo.name}`)
     .body(
@@ -377,7 +412,7 @@ function confirmSellInventoryItem(player, itemInfo) {
   system.run(() => {
     form.show(player).then((res) => {
       if (res.canceled || res.selection === 2) {
-        showSellInventoryUI(player);
+        showSellInventoryUI(player, fromMainMenu);
         return;
       }
 
@@ -387,7 +422,7 @@ function confirmSellInventoryItem(player, itemInfo) {
         sellInventoryItem(player, itemInfo.typeId, false);
       }
 
-      showSellInventoryUI(player);
+      showSellInventoryUI(player, fromMainMenu);
     });
   });
 }
@@ -395,7 +430,15 @@ function confirmSellInventoryItem(player, itemInfo) {
 // ==========================================
 // 7. CEK HARGA ITEM DI TANGAN (UI)
 // ==========================================
-export function showHeldItemPriceUI(player) {
+export function showHeldItemPriceUI(player, fromMainMenu = false) {
+  const returnToPrevious = () => {
+    if (fromMainMenu) {
+      showMainShopMenu(player);
+    } else {
+      showSellMenu(player, false);
+    }
+  };
+
   const info = getHeldItemSellInfo(player);
 
   let bodyText = "";
@@ -416,6 +459,6 @@ export function showHeldItemPriceUI(player) {
     .button("§l§c⬅ KEMBALI", "textures/ui/arrow_left");
 
   system.run(() => {
-    form.show(player).then(() => showMainShopMenu(player));
+    form.show(player).then(returnToPrevious);
   });
 }
