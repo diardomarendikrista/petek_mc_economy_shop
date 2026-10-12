@@ -130,9 +130,9 @@ _(Catatan: Belanja dan jual barang hanya bisa dilakukan dengan datang langsung k
 
 ---
 
-## ⚙️ Kustomisasi (`scripts/config.js`)
+## ⚙️ Kustomisasi Konfigurasi (`scripts/config.js`)
 
-Semua konfigurasi dapat diubah di file [`scripts/config.js`](file:///c:/Users/User/AppData/Roaming/Minecraft%20Bedrock/Users/Shared/games/com.mojang/development_behavior_packs/petek_mc_economy_shop/scripts/config.js):
+Semua konfigurasi sistem dapat diubah di file [`scripts/config.js`](scripts/config.js):
 
 - `ALLOW_GLOBAL_SHOP_ACCESS`:
   - `false` _(Default)_: Pemain wajib datang ke toko fisik dan menggunakan Sign.
@@ -152,15 +152,99 @@ Semua konfigurasi dapat diubah di file [`scripts/config.js`](file:///c:/Users/Us
 
 ---
 
-## 📦 Cara Transfer / Ekspor ke Teman (.mcpack)
+## 🏷️ Kustomisasi Daftar Item & Harga Toko (`scripts/shop/shop_items.js`)
 
-Jika ingin membagikan addon ini ke teman atau memindahkan ke HP:
+Jika ingin **mengubah harga**, **menambah item baru**, atau **menghapus item** dari katalog toko:
 
-1. Masuk ke dalam folder `petek_mc_economy_shop`.
-2. Blok seluruh isinya (`manifest.json`, folder `scripts`, `README.md`).
-3. Klik kanan ➔ _Compress to ZIP_.
-4. Ganti ekstensi file dari `.zip` menjadi `.mcpack` (contoh: `Petek_Economy_Shop.mcpack`).
-5. Kirim file tersebut. Teman cukup klik 2x (PC) atau tap file-nya (HP) untuk otomatis memasangnya ke Minecraft!
+### 1. File Yang Diubah:
+- **Daftar Barang & Harga Beli Dasar:** [`scripts/shop/shop_items.js`](scripts/shop/shop_items.js) pada array `SERVER_SHOP_ITEMS`.
+- **Rasio Harga Jual:** [`scripts/config.js`](scripts/config.js) pada `SELL_PRICE_MULTIPLIER` (otomatis mengalikan harga beli, misal `0.6` = 60%).
+
+### 2. Struktur Objek Item:
+Setiap item di dalam array `SERVER_SHOP_ITEMS` memiliki format seperti berikut:
+
+```javascript
+{
+  name: "Nama Item",                  // Nama yang tampil di menu UI Toko
+  id: "minecraft:nama_item",          // Identifier resmi item Minecraft
+  price: 10,                          // Harga beli (angka integer)
+  category: "Nature",                 // Kategori: Ores | Blocks | Wood | Food | Nature | Drops
+  texture: "textures/items/nama_item" // Path tekstur icon di Bedrock RP
+}
+```
+
+> **Catatan Harga Jual:** Pemain akan menjual barang dengan harga:
+> $$\text{Harga Jual} = \max(1, \lfloor \text{price} \times \text{SELL\_PRICE\_MULTIPLIER} \rfloor)$$
+> Jadi Anda cukup menentukan `price` (harga beli), dan harga jualnya akan dikalkulasi otomatis secara konsisten.
+
+### 3. Contoh: Menambah Item Baru (Misal: Jamur)
+Buka [`scripts/shop/shop_items.js`](scripts/shop/shop_items.js) dan tambahkan objek baru ke dalam array `SERVER_SHOP_ITEMS`:
+
+```javascript
+// Contoh menambah Brown Mushroom ke kategori Nature
+{
+  name: "Brown Mushroom",
+  id: "minecraft:brown_mushroom",
+  price: 4,                           // Beli $4 | Jual otomatis jadi $2 (4 x 0.6)
+  category: "Nature",
+  texture: "textures/blocks/mushroom_brown",
+},
+
+// Contoh menambah Mushroom Stew ke kategori Food
+{
+  name: "Mushroom Stew",
+  id: "minecraft:mushroom_stew",
+  price: 8,                           // Beli $8 | Jual otomatis jadi $4 (8 x 0.6)
+  category: "Food",
+  texture: "textures/items/mushroom_stew",
+},
+```
+
+### 4. Contoh: Mengubah Harga Item yang Sudah Ada
+Cari nama atau ID item di [`scripts/shop/shop_items.js`](scripts/shop/shop_items.js) (misal `minecraft:diamond`), lalu ubah nilai properti `price`:
+
+```javascript
+// Sebelum:
+{
+  name: "Diamond",
+  id: "minecraft:diamond",
+  price: 128,
+  ...
+}
+
+// Sesudah (misal ingin dinaikkan):
+{
+  name: "Diamond",
+  id: "minecraft:diamond",
+  price: 150,
+  ...
+}
+```
+
+---
+
+## 📦 Cara Ekspor, Pasang, dan Aktifkan di World (.mcpack)
+
+Untuk membagikan addon ini ke teman atau memindahkannya ke perangkat lain (PC / Android / iOS), Anda dapat mengemasnya menjadi file installer **`.mcpack`** yang mendukung instalasi otomatis 1-klik:
+
+### 1. Membuat File Installer (`.mcpack`):
+1. Buka folder `petek_mc_economy_shop`.
+2. Pilih file-file penting (`manifest.json`, folder `scripts`, `pack_icon.png`).
+3. Klik kanan ➔ **Compress to ZIP**.
+4. Ubah nama file dari `.zip` menjadi `.mcpack` (contoh: `Petek_Economy_Shop.mcpack`).
+
+### 2. Memasang ke Minecraft (Sisi Pemain / Teman):
+- **Windows (PC):** Cukup **dobel-klik (klik 2x)** file `Petek_Economy_Shop.mcpack`.
+- **Android / iOS (HP):** Tap file tersebut lalu pilih buka dengan (**Open with Minecraft**).
+- Minecraft akan otomatis terbuka dan memunculkan notifikasi di atas layar:
+  > *“Import started...”* ➔ *“Successfully imported Petek Economy & Shop”*
+
+### 3. Mengaktifkan di World Survival:
+1. Buka Minecraft ➔ klik ikon **Pensil / Edit** pada World yang diinginkan (atau saat bikin World baru).
+2. Di menu sebelah kiri, scroll ke bawah ke bagian **Behavior Packs**.
+3. Buka tab **Available** (Tersedia) ➔ temukan **Petek Economy & Shop**.
+4. Klik tombol **Activate**.
+5. Masuk ke dalam game dan nikmati sistem tokonya!
 
 ---
 

@@ -496,6 +496,34 @@ export const SERVER_SHOP_ITEMS = [
     category: "Nature",
     texture: "textures/items/nether_wart",
   },
+  {
+    name: "Brown Mushroom",
+    id: "minecraft:brown_mushroom",
+    price: 4,
+    category: "Nature",
+    texture: "textures/blocks/mushroom_brown",
+  },
+  {
+    name: "Red Mushroom",
+    id: "minecraft:red_mushroom",
+    price: 4,
+    category: "Nature",
+    texture: "textures/blocks/mushroom_red",
+  },
+  {
+    name: "Crimson Fungus",
+    id: "minecraft:crimson_fungus",
+    price: 6,
+    category: "Nature",
+    texture: "textures/blocks/huge_fungus/crimson_fungus",
+  },
+  {
+    name: "Warped Fungus",
+    id: "minecraft:warped_fungus",
+    price: 6,
+    category: "Nature",
+    texture: "textures/blocks/huge_fungus/warped_fungus",
+  },
 
   // ==========================================
   // === 5. FOOD & FARMING (Makanan & Ternak) ===
@@ -635,6 +663,13 @@ export const SERVER_SHOP_ITEMS = [
     price: 8,
     category: "Food",
     texture: "textures/items/bread",
+  },
+  {
+    name: "Mushroom Stew",
+    id: "minecraft:mushroom_stew",
+    price: 8,
+    category: "Food",
+    texture: "textures/items/mushroom_stew",
   },
   {
     name: "Cookie",
