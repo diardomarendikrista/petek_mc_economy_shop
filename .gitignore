@@ -1,0 +1,19 @@
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# IDE & Editor
+.vscode/
+.idea/
+
+# Archive files
+*.mcpack
+*.mcaddon
+*.zip
+
+# Temporary files
+*.bak
+*.tmp

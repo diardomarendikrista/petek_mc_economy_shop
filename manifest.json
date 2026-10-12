@@ -1,0 +1,42 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "Petek Economy & Shop (Single Player)",
+    "description": "Standalone Economy & Shop Addon for Single Player. No Beta APIs or Experiments required!",
+    "uuid": "21630384-aa13-4b99-b7a5-0a57d9af1f3f",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      21,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "description": "Economy & Shop Script Module",
+      "type": "script",
+      "language": "javascript",
+      "uuid": "c3b1c106-af7e-44ce-aea6-b6b7bba46c17",
+      "entry": "scripts/main.js",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "module_name": "@minecraft/server",
+      "version": "1.14.0"
+    },
+    {
+      "module_name": "@minecraft/server-ui",
+      "version": "1.3.0"
+    }
+  ]
+}
