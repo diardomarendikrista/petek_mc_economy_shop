@@ -1,4 +1,4 @@
-import { system } from "@minecraft/server";
+import { system, ItemStack } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { addMoney, formatMoney, getBalance } from "../economy/economy.js";
 import {
@@ -189,20 +189,25 @@ function buyConfirmation(player, item, returnCategory) {
 
       addMoney(player, -totalPrice);
       try {
-        player.runCommandAsync(`give @s ${item.id} ${amount}`);
-        player.sendMessage(
-          `§a[Sukses] Membeli §f${amount}x ${item.name} §aseharga §e${formatMoney(totalPrice)}§a.`,
-        );
-        player.sendMessage(
-          `§aSisa Saldo: §e${formatMoney(getBalance(player))}`,
-        );
-        player.playSound("random.orb");
+        inventory.container.addItem(new ItemStack(item.id, amount));
       } catch (e) {
-        addMoney(player, totalPrice);
-        player.sendMessage(
-          "§c[Error] Gagal memberikan item. Saldo dikembalikan.",
-        );
+        try {
+          player.runCommand(`give @s ${item.id} ${amount}`);
+        } catch (err) {
+          addMoney(player, totalPrice);
+          player.sendMessage(
+            "§c[Error] Gagal memberikan item. Saldo dikembalikan.",
+          );
+          showShopUI(player, returnCategory);
+          return;
+        }
       }
+
+      player.sendMessage(
+        `§a[Sukses] Membeli §f${amount}x ${item.name} §aseharga §e${formatMoney(totalPrice)}§a.`,
+      );
+      player.sendMessage(`§aSisa Saldo: §e${formatMoney(getBalance(player))}`);
+      player.playSound("random.orb");
 
       showShopUI(player, returnCategory);
     });

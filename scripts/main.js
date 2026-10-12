@@ -7,21 +7,18 @@ import {
   handleAddMoney,
   handleSetMoney,
 } from "./economy/economy.js";
-import {
-  handleSellHand,
-  handlePriceCheck,
-  handleShopSignInteract,
-} from "./shop/shop.js";
+import { handleSellHand, handlePriceCheck } from "./shop/shop.js";
+import { handleShopSignInteract } from "./shop/sign_shop.js";
 import { showMainShopMenu } from "./shop/shop_ui.js";
-
-const menuCooldowns = new Map();
 
 // ==========================================
 // INISIALISASI SAAT WORLD DIBUKA
 // ==========================================
 system.run(() => {
   setupEconomy();
-  console.warn(">> [Petek Economy & Shop SP] Addon successfully loaded!");
+  console.warn(
+    ">> [Petek Economy & Shop SP] Addon successfully loaded (Sign Shop & /scriptevent Mode)!",
+  );
 });
 
 // Listener Player Spawn (Modal awal & inisialisasi)
@@ -32,76 +29,72 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
 });
 
 // ==========================================
-// 1. TRIGGER MENU VIA ITEM (KLIK KANAN / TAHAN LAYAR)
+// 1. SIGN SHOP LISTENER (UTAMA - TOKO FISIK)
 // ==========================================
-world.beforeEvents.itemUse.subscribe((ev) => {
-  const item = ev.itemStack;
-  const player = ev.source;
-
-  if (!item) return;
-
-  if (CONFIG.TRIGGER_ITEMS.includes(item.typeId)) {
-    ev.cancel = true;
-
-    const now = Date.now();
-    const lastUse = menuCooldowns.get(player.name) || 0;
-
-    if (now - lastUse < CONFIG.TRIGGER_COOLDOWN_MS) {
-      return;
-    }
-    menuCooldowns.set(player.name, now);
-
-    system.run(() => {
-      if (CONFIG.ALLOW_GLOBAL_SHOP_ACCESS) {
-        showMainShopMenu(player);
-      } else {
-        player.sendMessage(
-          "§c[Shop] Akses belanja di mana saja dinonaktifkan.",
-        );
-        player.sendMessage(
-          "§eSilakan buat & gunakan Sign §b[MARKET] §eatau §b[SHOP] §edi toko fisikmu!",
-        );
-        player.sendMessage(
-          "§7(Bisa diaktifkan kembali lewat 'ALLOW_GLOBAL_SHOP_ACCESS' di scripts/config.js)",
-        );
-        player.playSound("mob.villager.no");
-      }
-    });
+// 100% Stable API: Menangkap klik kanan Sign [MARKET], [SELL], [SHOP]
+// dan membatalkan aksi edit bawaan Minecraft.
+world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
+  try {
+    handleShopSignInteract(ev);
+  } catch (e) {
+    console.warn(`[Sign Shop Error] ${e}`);
   }
 });
 
 // ==========================================
-// 2. CHAT COMMAND LISTENER
+// 2. SCRIPTEVENT COMMAND LISTENER (100% STABLE NON-EXPERIMENTAL)
 // ==========================================
-world.beforeEvents.chatSend.subscribe((ev) => {
-  const message = ev.message;
-  const player = ev.sender;
+// Contoh penggunaan di game:
+//   /scriptevent shop:bal
+//   /scriptevent shop:price
+//   /scriptevent shop:help
+//   /scriptevent shop:addmoney 500
+system.afterEvents.scriptEventReceive.subscribe((ev) => {
+  const { id, message } = ev;
+  const player = ev.initiator ?? ev.sourceEntity;
 
-  if (!message.startsWith(CONFIG.CMD_PREFIX)) return;
+  // Pastikan perintah dijalankan oleh Player
+  if (!player || player.typeId !== "minecraft:player") return;
 
-  ev.cancel = true;
+  let command = "";
+  let args = "";
 
-  const content = message.substring(CONFIG.CMD_PREFIX.length).trim();
-  const parts = content.split(" ");
-  const command = parts[0].toLowerCase();
-  const args = parts.slice(1).join(" ");
+  if (id.startsWith("shop:") || id.startsWith("eco:")) {
+    // Format: /scriptevent shop:bal ATAU /scriptevent shop:addmoney 100
+    command = id.split(":")[1].toLowerCase();
+    args = (message || "").trim();
+  } else if (id === "shop" || id === "eco") {
+    // Format: /scriptevent shop bal ATAU /scriptevent shop addmoney 100
+    const parts = (message || "").trim().split(" ");
+    command = (parts[0] || "").toLowerCase();
+    args = parts.slice(1).join(" ").trim();
+  } else {
+    return;
+  }
 
   system.run(() => {
     switch (command) {
+      case "bal":
+      case "balance":
+      case "money":
+      case "uang":
+        handleBalance(player);
+        break;
+
+      case "price":
+      case "cek":
+        handlePriceCheck(player);
+        break;
+
       case "shop":
       case "market":
       case "menu":
         if (CONFIG.ALLOW_GLOBAL_SHOP_ACCESS) {
           showMainShopMenu(player);
         } else {
+          player.sendMessage("§c[Shop] Belanja di mana saja dinonaktifkan.");
           player.sendMessage(
-            "§c[Shop] Belanja via command di mana saja dinonaktifkan.",
-          );
-          player.sendMessage(
-            "§eSilakan buat & gunakan Sign §b[MARKET] §eatau §b[SHOP] §edi toko fisikmu!",
-          );
-          player.sendMessage(
-            "§7(Bisa diaktifkan kembali lewat 'ALLOW_GLOBAL_SHOP_ACCESS' di scripts/config.js)",
+            "§eSilakan kunjungi toko fisik dan klik Sign §b[MARKET] §eatau §b[SHOP]!",
           );
           player.playSound("mob.villager.no");
         }
@@ -115,25 +108,10 @@ world.beforeEvents.chatSend.subscribe((ev) => {
             "§c[Shop] Jual via command di mana saja dinonaktifkan.",
           );
           player.sendMessage(
-            "§eSilakan buat & gunakan Sign §6[SELL] §eatau §b[MARKET] §edi toko fisikmu!",
-          );
-          player.sendMessage(
-            "§7(Bisa diaktifkan kembali lewat 'ALLOW_GLOBAL_SELL_COMMAND' di scripts/config.js)",
+            "§eSilakan kunjungi toko fisik dan klik Sign §6[SELL]!",
           );
           player.playSound("mob.villager.no");
         }
-        break;
-
-      case "price":
-      case "cek":
-        handlePriceCheck(player);
-        break;
-
-      case "bal":
-      case "balance":
-      case "money":
-      case "uang":
-        handleBalance(player);
         break;
 
       case "addmoney":
@@ -151,15 +129,106 @@ world.beforeEvents.chatSend.subscribe((ev) => {
 
       default:
         player.sendMessage(
-          `§c[Shop] Command '${CONFIG.CMD_PREFIX}${command}' tidak dikenal. Ketik ${CONFIG.CMD_PREFIX}help untuk bantuan.`,
+          `§c[Shop] Perintah '/scriptevent shop:${command}' tidak dikenal.`,
+        );
+        player.sendMessage(
+          "§7Ketik '/scriptevent shop:help' untuk melihat daftar perintah.",
         );
         break;
     }
   });
 });
 
+// ==========================================
+// 3. CHAT COMMAND FALLBACK (HANYA AKTIF JIKA BETA APIS DIAKTIFKAN)
+// ==========================================
+try {
+  if (world.beforeEvents?.chatSend) {
+    world.beforeEvents.chatSend.subscribe((ev) => {
+      const message = ev.message;
+      const player = ev.sender;
+
+      if (!message.startsWith(CONFIG.CMD_PREFIX)) return;
+
+      ev.cancel = true;
+
+      const content = message.substring(CONFIG.CMD_PREFIX.length).trim();
+      const parts = content.split(" ");
+      const command = parts[0].toLowerCase();
+      const args = parts.slice(1).join(" ");
+
+      system.run(() => {
+        switch (command) {
+          case "shop":
+          case "market":
+          case "menu":
+            if (CONFIG.ALLOW_GLOBAL_SHOP_ACCESS) {
+              showMainShopMenu(player);
+            } else {
+              player.sendMessage(
+                "§c[Shop] Belanja via chat di mana saja dinonaktifkan.",
+              );
+              player.sendMessage(
+                "§eSilakan kunjungi toko fisik dan klik Sign §b[MARKET] §eatau §b[SHOP]!",
+              );
+              player.playSound("mob.villager.no");
+            }
+            break;
+
+          case "sell":
+            if (CONFIG.ALLOW_GLOBAL_SELL_COMMAND) {
+              handleSellHand(player);
+            } else {
+              player.sendMessage(
+                "§c[Shop] Jual via command di mana saja dinonaktifkan.",
+              );
+              player.sendMessage(
+                "§eSilakan kunjungi toko fisik dan klik Sign §6[SELL]!",
+              );
+              player.playSound("mob.villager.no");
+            }
+            break;
+
+          case "price":
+          case "cek":
+            handlePriceCheck(player);
+            break;
+
+          case "bal":
+          case "balance":
+          case "money":
+          case "uang":
+            handleBalance(player);
+            break;
+
+          case "addmoney":
+            handleAddMoney(player, args);
+            break;
+
+          case "setmoney":
+            handleSetMoney(player, args);
+            break;
+
+          case "help":
+          case "h":
+            printHelp(player);
+            break;
+
+          default:
+            player.sendMessage(
+              `§c[Shop] Command '${CONFIG.CMD_PREFIX}${command}' tidak dikenal. Ketik '/scriptevent shop:help' untuk bantuan.`,
+            );
+            break;
+        }
+      });
+    });
+  }
+} catch (_) {
+  // Abaikan di mode Stable tanpa Beta APIs
+}
+
 function printHelp(player) {
-  player.sendMessage("\n§l§2=== PETEK ECONOMY & SHOP (SIGN SYSTEM) ===");
+  player.sendMessage("\n§l§2=== PETEK ECONOMY & SHOP (SIGN TOKO FISIK) ===");
   player.sendMessage("§bCara Membuat Toko Fisik Menggunakan Sign:");
   player.sendMessage(
     "§e 1. [MARKET] §7(Baris 2: All / Kategori) §f-> Klik kanan untuk buka GUI Shop",
@@ -170,32 +239,22 @@ function printHelp(player) {
   player.sendMessage(
     "§e 3. [SHOP] §7(Brs 2: Harga, Brs 3: Qty, Brs 4: Item/hand) §f-> Beli instan",
   );
-  player.sendMessage("\n§aCommand yang Tersedia:");
-  player.sendMessage(`§e${CONFIG.CMD_PREFIX}bal §f: Cek saldo uang saat ini`);
+  player.sendMessage("\n§aCommand Resmi (/scriptevent):");
+  player.sendMessage("§e /scriptevent shop:bal §f: Cek saldo uang saat ini");
   player.sendMessage(
-    `§e${CONFIG.CMD_PREFIX}price §f: Cek harga jual item di tangan`,
+    "§e /scriptevent shop:price §f: Cek harga jual item di tangan",
   );
+  player.sendMessage("§e /scriptevent shop:help §f: Tampilkan panduan ini");
   if (CONFIG.ENABLE_CHEAT_COMMANDS) {
     player.sendMessage(
-      `§e${CONFIG.CMD_PREFIX}addmoney <jumlah> §f: Tambah saldo sendiri (Cheat SP)`,
+      "§e /scriptevent shop:addmoney <jumlah> §f: Tambah saldo sendiri (Cheat SP)",
     );
     player.sendMessage(
-      `§e${CONFIG.CMD_PREFIX}setmoney <jumlah> §f: Setel saldo sendiri`,
+      "§e /scriptevent shop:setmoney <jumlah> §f: Setel saldo sendiri",
     );
   }
   player.sendMessage(
-    `§7Catatan: Buka toko di mana saja dinonaktifkan (Ubah 'ALLOW_GLOBAL_SHOP_ACCESS' di scripts/config.js jika ingin mengaktifkannya).\n`,
+    "§7Catatan: Belanja hanya dapat dilakukan di toko fisik melalui Sign [MARKET] atau [SHOP].\n",
   );
   player.playSound("random.orb");
 }
-
-// ==========================================
-// 3. SIGN SHOP LISTENER (OPTIONAL WORLD SIGNS)
-// ==========================================
-world.beforeEvents.playerInteractWithBlock.subscribe((ev) => {
-  try {
-    handleShopSignInteract(ev);
-  } catch (e) {
-    console.warn(`[Sign Shop Error] ${e}`);
-  }
-});
