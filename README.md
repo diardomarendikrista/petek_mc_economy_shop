@@ -21,7 +21,8 @@
 <p align="center">
   <img src=".github/assets/mc-1.jpg" alt="Preview 1" width="850" /><br><br>
   <img src=".github/assets/mc-2.jpg" alt="Preview 2" width="850" /><br><br>
-  <img src=".github/assets/mc-3.jpg" alt="Preview 3" width="850" />
+  <img src=".github/assets/mc-3.jpg" alt="Preview 3" width="850" /><br><br>
+  <img src=".github/assets/mc-4.jpg" alt="Preview 4" width="850" />
 </p>
 
 ---
@@ -69,6 +70,20 @@ Cocok untuk membuat etalase rak khusus barang tertentu:
 
 ---
 
+### 4. Papan Bengkel Pandai Besi (`[REPAIR]`) — Reparasi Alat & Armor Bebas Anvil Cap
+
+Digunakan untuk memperbaiki alat, senjata, atau armor rusak tanpa batasan pinalti Anvil (_Too Expensive_):
+
+- **Tulis di Sign:**
+  - Baris 1: `[REPAIR]`
+- **Cara Mengaktifkan:**
+  - Klik kanan sign sambil memegang alat yang rusak di tangan utama.
+  - Sign akan otomatis berganti warna cyan (`§3§l[REPAIR]`) dan membuka pop-up rincian biaya.
+  - **Kalkulasi Dinamis & Adil:** Biaya dihitung berdasarkan persentase kerusakan ($damage\%$) dan harga bahan aslinya (Netherite/Diamond/Iron/dsb.), dengan pembulatan bilangan bulat bersih.
+  - Durability alat kembali penuh (100%), dan seluruh **Enchantment tetap utuh seutuhnya**.
+
+---
+
 ## ⚖️ Pedoman Rasio Ekonomi (Balancing)
 
 Ekonomi mod ini menggunakan sistem rasio matematis yang adil:
@@ -106,6 +121,7 @@ Karena tidak menggunakan experimental, gunakan perintah resmi `/scriptevent` di 
 | :------------------------------------ | :--------------------------------------------------------------------------- |
 | `/scriptevent shop:bal`               | Mengecek saldo uang saat ini                                                 |
 | `/scriptevent shop:price`             | Mengecek estimasi harga jual item di tangan                                  |
+| `/scriptevent shop:repair`            | Membuka menu reparasi untuk alat/armor di tangan (Bengkel Tukang Besi)       |
 | `/scriptevent shop:help`              | Menampilkan panduan ringkas pembuatan toko sign di chat                      |
 | `/scriptevent shop:addmoney <jumlah>` | Menambahkan uang sendiri (Cheat SP, misal: `/scriptevent shop:addmoney 500`) |
 | `/scriptevent shop:setmoney <jumlah>` | Menyetel saldo sendiri (misal: `/scriptevent shop:setmoney 2000`)            |
@@ -128,6 +144,11 @@ Semua konfigurasi dapat diubah di file [`scripts/config.js`](file:///c:/Users/Us
 - `ENABLE_STARTER_MONEY`: Berikan modal awal pemain baru (`true` / `false`).
 - `STARTER_MONEY_AMOUNT`: Jumlah modal awal (default: `$1,000`).
 - `ENABLE_CHEAT_COMMANDS`: Mengaktifkan/menonaktifkan command `!addmoney` dan `!setmoney`.
+- `ENABLE_BLACKSMITH_REPAIR`:
+  - `true` _(Default)_: Mengaktifkan bengkel reparasi tukang besi via Sign `[REPAIR]` atau `/scriptevent shop:repair`.
+  - `false`: Menonaktifkan fitur reparasi tukang besi.
+- `REPAIR_PRICE_DISCOUNT`: Diskon biaya servis dibanding harga material baru (default: `0.6` / 60%).
+- `REPAIR_SERVICE_FEE`: Ongkos jasa tempa flat (default: `$5`).
 
 ---
 

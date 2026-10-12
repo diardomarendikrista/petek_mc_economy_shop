@@ -27,13 +27,29 @@ export const CONFIG = {
 
   // Modal saldo awal saat pertama kali main di world
   ENABLE_STARTER_MONEY: true,
-  STARTER_MONEY_AMOUNT: 100,
+  STARTER_MONEY_AMOUNT: 10,
 
   // Izinkan cheat command untuk single player (!addmoney, !setmoney)
   ENABLE_CHEAT_COMMANDS: true,
+
+  // ==========================================
+  // PENGATURAN BENGKEL PANDAI BESI (BLACKSMITH REPAIR)
+  // ==========================================
+  // Jika true: Pemain bisa memperbaiki alat rusak di Sign [REPAIR] atau /scriptevent shop:repair
+  ENABLE_BLACKSMITH_REPAIR: true,
+
+  // Diskon biaya reparasi dibanding harga bahan baru (0.6 = 60% harga bahan)
+  REPAIR_PRICE_DISCOUNT: 0.6,
+
+  // Ongkos jasa tempa tukang besi (flat, integer bersih)
+  REPAIR_SERVICE_FEE: 5,
+
+  // Biaya minimal reparasi
+  MIN_REPAIR_COST: 1,
 
   // Scoreboard Currency Info
   CURRENCY: "money",
   DISPLAY_NAME: "§a§lMONEY",
   CURRENCY_SYMBOL: "$",
 };
+

@@ -10,6 +10,7 @@ import {
 import { handleSellHand, handlePriceCheck } from "./shop/shop.js";
 import { handleShopSignInteract } from "./shop/sign_shop.js";
 import { showMainShopMenu } from "./shop/shop_ui.js";
+import { showRepairUI } from "./shop/repair.js";
 
 // ==========================================
 // INISIALISASI SAAT WORLD DIBUKA
@@ -84,6 +85,11 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
       case "price":
       case "cek":
         handlePriceCheck(player);
+        break;
+
+      case "repair":
+      case "fix":
+        showRepairUI(player);
         break;
 
       case "shop":
@@ -194,6 +200,11 @@ try {
             handlePriceCheck(player);
             break;
 
+          case "repair":
+          case "fix":
+            showRepairUI(player);
+            break;
+
           case "bal":
           case "balance":
           case "money":
@@ -239,11 +250,15 @@ function printHelp(player) {
   player.sendMessage(
     "§e 3. [SHOP] §7(Brs 2: Harga, Brs 3: Qty, Brs 4: Item/hand) §f-> Beli instan",
   );
+  player.sendMessage(
+    "§e 4. [REPAIR] §f-> Klik kanan untuk perbaiki alat di tangan (Blacksmith)",
+  );
   player.sendMessage("\n§aCommand Resmi (/scriptevent):");
   player.sendMessage("§e /scriptevent shop:bal §f: Cek saldo uang saat ini");
   player.sendMessage(
     "§e /scriptevent shop:price §f: Cek harga jual item di tangan",
   );
+  player.sendMessage("§e /scriptevent shop:repair §f: Reparasi alat di tangan");
   player.sendMessage("§e /scriptevent shop:help §f: Tampilkan panduan ini");
   if (CONFIG.ENABLE_CHEAT_COMMANDS) {
     player.sendMessage(

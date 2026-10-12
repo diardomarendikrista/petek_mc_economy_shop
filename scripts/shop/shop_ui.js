@@ -1,6 +1,8 @@
 import { system, ItemStack } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
+import { CONFIG } from "../config.js";
 import { addMoney, formatMoney, getBalance } from "../economy/economy.js";
+import { showRepairUI } from "./repair.js";
 import {
   getTexture,
   getSellPrice,
@@ -36,28 +38,31 @@ export function showMainShopMenu(player) {
     .button(
       "§l§bℹ️ CEK HARGA TANGAN\n§r§8Lihat nilai jual item di tangan",
       "textures/ui/magnifying_glass",
-    )
-    .button("§l§c✖ TUTUP", "textures/ui/cancel");
+    );
+
+  if (CONFIG.ENABLE_BLACKSMITH_REPAIR) {
+    form.button(
+      "§l§3🔧 REPARASI ALAT (BENGKEL)\n§r§8Perbaiki durability item di tangan",
+      "textures/items/anvil",
+    );
+  }
+
+  form.button("§l§c✖ TUTUP", "textures/ui/cancel");
 
   system.run(() => {
     form.show(player).then((res) => {
       if (res.canceled) return;
 
-      switch (res.selection) {
-        case 0:
-          showCategoryPicker(player);
-          break;
-        case 1:
-          showSellHandUI(player);
-          break;
-        case 2:
-          showSellInventoryUI(player);
-          break;
-        case 3:
-          showHeldItemPriceUI(player);
-          break;
-        default:
-          break;
+      if (res.selection === 0) {
+        showCategoryPicker(player);
+      } else if (res.selection === 1) {
+        showSellHandUI(player);
+      } else if (res.selection === 2) {
+        showSellInventoryUI(player);
+      } else if (res.selection === 3) {
+        showHeldItemPriceUI(player);
+      } else if (CONFIG.ENABLE_BLACKSMITH_REPAIR && res.selection === 4) {
+        showRepairUI(player);
       }
     });
   });

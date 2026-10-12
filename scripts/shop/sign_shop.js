@@ -1,6 +1,7 @@
 import { system, ItemStack, SignSide } from "@minecraft/server";
 import { addMoney, formatMoney, getBalance } from "../economy/economy.js";
 import { showMainShopMenu, showShopUI, showSellMenu } from "./shop_ui.js";
+import { showRepairUI } from "./repair.js";
 
 /**
  * Membaca teks dan sisi aktif (Front / Back) dari Sign block
@@ -71,9 +72,10 @@ export function handleShopSignInteract(event) {
   const isMarket = header === "[MARKET]";
   const isSell = header === "[SELL]";
   const isShop = header === "[SHOP]";
+  const isRepair = header === "[REPAIR]";
 
-  // Jika bukan sign khusus shop, abaikan (pemain bisa edit sign biasa)
-  if (!isMarket && !isSell && !isShop) return;
+  // Jika bukan sign khusus shop/repair, abaikan (pemain bisa edit sign biasa)
+  if (!isMarket && !isSell && !isShop && !isRepair) return;
 
   // ==========================================
   // PENTING: BATALKAN INTERAKSI VANILLA!
@@ -147,7 +149,36 @@ export function handleShopSignInteract(event) {
   }
 
   // ==========================================
-  // 3. [SHOP] SIGN -> BELI INSTAN ITEM SPESIFIK
+  // 3. [REPAIR] SIGN -> BUKA BENGKEL PANDAI BESI
+  // ==========================================
+  if (isRepair) {
+    system.run(() => {
+      // Jika belum diformat cyan/teal, beri format otomatis
+      if (!rawLines[0].includes("§3")) {
+        try {
+          const formatted = `§3§l[REPAIR]\n§0Blacksmith\n§8(Right Click)\n§7to Repair`;
+          try {
+            signComp.setText(formatted, side);
+          } catch (_) {
+            signComp.setText(formatted);
+          }
+          player.sendMessage(
+            `§a[Repair Sign] Sign pandai besi berhasil didaftarkan! Klik kanan sambil memegang alat rusak.`,
+          );
+          player.playSound("random.levelup");
+        } catch (e) {
+          console.warn(`[Repair Sign Error] ${e}`);
+        }
+      }
+
+      // Buka UI Repair
+      showRepairUI(player);
+    });
+    return;
+  }
+
+  // ==========================================
+  // 4. [SHOP] SIGN -> BELI INSTAN ITEM SPESIFIK
   // ==========================================
   if (isShop) {
     system.run(() => {
